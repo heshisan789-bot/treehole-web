@@ -1,57 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tree Hole 🌳</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>树洞 · 倾听与陪伴的空间</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f3f7f0;
+      font-family: "Noto Sans SC", "Microsoft Yahei", sans-serif;
+      background: linear-gradient(160deg, #f3f2f7, #e7ecf5);
+      color: #333;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
+
     h1 {
+      margin-top: 40px;
+      font-size: 28px;
+      color: #5b6275;
       text-align: center;
-      color: #4a7058;
     }
-    #posts {
-      margin-top: 20px;
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 20px;
+      text-align: center;
     }
-    .post {
-      background: #fff;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+
     textarea {
-      width: 100%;
-      height: 80px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      padding: 10px;
-      resize: none;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 15px;
+      width: 80%;
+      max-width: 600px;
+      height: 100px;
       border: none;
-      background-color: #4a7058;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 16px;
+      resize: none;
+      background-color: #fff;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      outline: none;
     }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 25px;
+      font-size: 16px;
+      background: #8aa7ff;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(138, 167, 255, 0.4);
+      transition: 0.3s;
+    }
+
     button:hover {
-      background-color: #3c5e4a;
+      background: #7b93f3;
+      transform: scale(1.05);
+    }
+
+    #posts {
+      margin-top: 40px;
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding-bottom: 50px;
+    }
+
+    .post {
+      background-color: #ffffffd9;
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+      animation: fadeIn 0.4s ease-in;
+    }
+
+    .post small {
+      display: block;
+      text-align: right;
+      color: #aaa;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      color: #aaa;
+      font-size: 12px;
+      margin: 30px 0;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>🌳 Tree Hole</h1>
-  <textarea id="message" placeholder="Write your thoughts here..."></textarea><br />
-  <button onclick="postMessage()">Post</button>
+  <h1>🌿 树洞 · 倾听与陪伴的空间</h1>
+  <div class="subtitle">写下你的心情，让它被温柔地接住。</div>
+
+  <textarea id="message" placeholder="今天的你，有什么想说的吗？"></textarea>
+  <button onclick="postMessage()">🌱 发送</button>
+
   <div id="posts"></div>
+
+  <footer>Made with 🌸 by Treehole | 你的心情值得被倾听</footer>
 
   <script>
     const postsDiv = document.getElementById('posts');
@@ -60,7 +119,7 @@
 
     function postMessage() {
       const msg = document.getElementById('message').value.trim();
-      if (!msg) return alert('Please write something first.');
+      if (!msg) return alert('请写点什么吧 🌱');
       const post = { text: msg, time: new Date().toLocaleString() };
       posts.unshift(post);
       localStorage.setItem('treehole_posts', JSON.stringify(posts));
@@ -72,8 +131,7 @@
       const div = document.createElement('div');
       div.className = 'post';
       div.innerHTML = `<p>${post.text}</p><small>${post.time}</small>`;
-      if (isNew) postsDiv.prepend(div);
-      else postsDiv.appendChild(div);
+      if (isNew) postsDiv.prepend(div); else postsDiv.appendChild(div);
     }
   </script>
 </body>
