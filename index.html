@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tree Hole 🌳</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f7f0;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #4a7058;
+    }
+    #posts {
+      margin-top: 20px;
+    }
+    .post {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      resize: none;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 15px;
+      border: none;
+      background-color: #4a7058;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3c5e4a;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌳 Tree Hole</h1>
+  <textarea id="message" placeholder="Write your thoughts here..."></textarea><br />
+  <button onclick="postMessage()">Post</button>
+  <div id="posts"></div>
+
+  <script>
+    const postsDiv = document.getElementById('posts');
+    let posts = JSON.parse(localStorage.getItem('treehole_posts') || '[]');
+    posts.forEach(showPost);
+
+    function postMessage() {
+      const msg = document.getElementById('message').value.trim();
+      if (!msg) return alert('Please write something first.');
+      const post = { text: msg, time: new Date().toLocaleString() };
+      posts.unshift(post);
+      localStorage.setItem('treehole_posts', JSON.stringify(posts));
+      showPost(post, true);
+      document.getElementById('message').value = '';
+    }
+
+    function showPost(post, isNew = false) {
+      const div = document.createElement('div');
+      div.className = 'post';
+      div.innerHTML = `<p>${post.text}</p><small>${post.time}</small>`;
+      if (isNew) postsDiv.prepend(div);
+      else postsDiv.appendChild(div);
+    }
+  </script>
+</body>
+</html>
