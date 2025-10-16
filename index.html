@@ -181,109 +181,99 @@
 
 
   <script type="module">
-  // 引入 Firebase 模块
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+/* ---------- Firebase + Firestore (module) ---------- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-  // 你的 Firebase 配置信息
-  const firebaseConfig = {
-    apiKey: "AIzaSyBzjxDeIAGCGuhgBIdtAVlLbqDbs_r8BQk",
-    authDomain: "treehole-184db.firebaseapp.com",
-    projectId: "treehole-184db",
-    storageBucket: "treehole-184db.firebasestorage.app",
-    messagingSenderId: "739287337149",
-    appId: "1:739287337149:web:197ae3cf73105cbc280fd4",
-    measurementId: "G-VY0CZ8V4VQ"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBzjxDeIAGCGuhgBIdtAVlLbqDbs_r8BQk",
+  authDomain: "treehole-184db.firebaseapp.com",
+  projectId: "treehole-184db",
+  storageBucket: "treehole-184db.firebasestorage.app",
+  messagingSenderId: "739287337149",
+  appId: "1:739287337149:web:197ae3cf73105cbc280fd4",
+  measurementId: "G-VY0CZ8V4VQ"
+};
 
-  // 初始化 Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  console.log("✅ Firebase 已连接");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+console.log("✅ Firebase app initialized, Firestore ready");
 
-  // DOM 元素
-  const postsDiv = document.getElementById("posts");
-  const messageInput = document.getElementById("message");
-  const emotionSelect = document.getElementById("emotion");
-  const sendBtn = document.querySelector("button");
+/* ---------- DOM elements ---------- */
+const postsDiv = document.getElementById('posts');
+const messageInput = document.getElementById('message');
+const emotionSelect = document.getElementById('emotion');
+const sendBtn = document.querySelector('button[onclick="postMessage()"]') || document.querySelector('button');
 
-  // 加载已有留言
-  async function loadPosts() {
-    postsDiv.innerHTML = "";
-    const querySnapshot = await getDocs(collection(db, "posts"));
-    querySnapshot.forEach((doc) => {
-      const post = doc.data();
-      showPost(post);
+/* ---------- Helpers ---------- */
+function emotionText(e){
+  return { happy: "😊 开心", sad: "😢 沮丧", lost: "😔 迷茫", grateful: "💚 感动", calm: "🌙 平静" }[e] || "💬 心情";
+}
+function createPostElement(data){
+  const div = document.createElement('div');
+  div.className = 'post';
+  div.innerHTML = `
+    <div class="emotion ${data.emotion}">${emotionText(data.emotion)}</div>
+    <div style="margin-top:8px; white-space:pre-wrap;">${escapeHtml(data.text)}</div>
+    <div class="time" style="color:#999; font-size:12px; margin-top:8px;">${data.time || ''}</div>
+  `;
+  return div;
+}
+function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+/* ---------- Post (write) ---------- */
+async function sendPostToFirestore(text, emotion){
+  try{
+    await addDoc(collection(db, "posts"), {
+      text,
+      emotion,
+      time: new Date().toLocaleString(),
+      createdAt: serverTimestamp()
     });
+    console.log("✅ Post written to Firestore");
+  }catch(e){
+    console.error("❌ Firestore write failed:", e);
+    alert("发送失败（请看控制台错误），可能是权限或网络问题");
   }
+}
 
-  // 显示单个留言
-  function showPost(post) {
-    const div = document.createElement("div");
-    div.className = "post";
-    div.innerHTML = `
-      <div class="emotion ${post.emotion}">${emotionText(post.emotion)}</div>
-      <div>${post.text}</div>
-      <div class="time" style="color:#999; font-size:12px; margin-top:6px;">
-        ${post.time || ""}
-      </div>
-    `;
-    postsDiv.prepend(div);
-  }
-
-  // 发送按钮事件
-  sendBtn.addEventListener("click", async () => {
-    const msg = messageInput.value.trim();
-    const emo = emotionSelect.value;
-    if (!msg) return alert("请写点什么吧 🌱");
-
-    try {
-      await addDoc(collection(db, "posts"), {
-        text: msg,
-        emotion: emo,
-        time: new Date().toLocaleString(),
-        createdAt: serverTimestamp(),
-      });
-      alert("发送成功！🌸");
-      messageInput.value = "";
-      loadPosts();
-    } catch (err) {
-      console.error("❌ 发送失败:", err);
-      alert("发送失败，请检查控制台。");
-    }
+/* ---------- Real-time read (listen) ---------- */
+function startRealtimeListener(){
+  // 按 createdAt 降序
+  const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+    postsDiv.innerHTML = '';
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      postsDiv.appendChild(createPostElement(data));
+    });
+    console.log("🔁 Posts updated, total:", snapshot.size);
+  }, (err) => {
+    console.error("❌ onSnapshot error:", err);
   });
+}
 
-  // 情绪中文名
-  function emotionText(e) {
-    return {
-      happy: "😊 开心",
-      sad: "😢 沮丧",
-      lost: "😔 迷茫",
-      grateful: "💚 感动",
-      calm: "🌙 平静",
-    }[e] || "💬 心情";
-  }
+/* ---------- Wire send button (hook up existing button) ---------- */
+if(sendBtn){
+  // 移除页面上原有 onclick（如果仍有），改用 JS 绑定
+  try { sendBtn.removeAttribute('onclick'); } catch(e){}
+  sendBtn.addEventListener('click', async () => {
+    const text = messageInput.value.trim();
+    const emo = emotionSelect.value;
+    if(!text) return alert('请写点什么吧 🌱');
+    sendBtn.disabled = true;
+    await sendPostToFirestore(text, emo);
+    messageInput.value = '';
+    sendBtn.disabled = false;
+  });
+} else {
+  console.warn("⚠️ 未找到发送按钮的 DOM 节点，请确认页面中存在发送按钮");
+}
 
-  // 页面加载时获取数据
-  loadPosts();
+/* ---------- Start listener ---------- */
+startRealtimeListener();
 </script>
 
-  
-  <script>
-    const postsDiv = document.getElementById('posts');
-    let posts = JSON.parse(localStorage.getItem('treehole_posts_v2') || '[]');
-    posts.forEach(showPost);
-
-    function postMessage() {
-      const msg = document.getElementById('message').value.trim();
-      const emo = document.getElementById('emotion').value;
-      if (!msg) return alert('请写点什么吧 🌱');
-      const post = { text: msg, emotion: emo, likes: 0, replies: [], time: new Date().toLocaleString() };
-      posts.unshift(post);
-      localStorage.setItem('treehole_posts_v2', JSON.stringify(posts));
-      showPost(post, true);
-      document.getElementById('message').value = '';
-    }
 
     function showPost(post, isNew = false) {
       const div = document.createEleme
