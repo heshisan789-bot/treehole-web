@@ -181,7 +181,6 @@
 
 
   <script type="module">
-/* ---------- Firebase + Firestore (module) ---------- */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
@@ -199,13 +198,32 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 console.log("✅ Firebase app initialized, Firestore ready");
 
-/* ---------- DOM elements ---------- */
 const postsDiv = document.getElementById('posts');
 const messageInput = document.getElementById('message');
 const emotionSelect = document.getElementById('emotion');
 const sendBtn = document.querySelector('button[onclick="postMessage()"]') || document.querySelector('button');
 
-/* ---------- Helpers ---------- */
+/* ---------- 小提示框函数 ---------- */
+function showPopup(text) {
+  const popup = document.createElement('div');
+  popup.textContent = text;
+  popup.style.position = 'fixed';
+  popup.style.bottom = '20px';
+  popup.style.left = '50%';
+  popup.style.transform = 'translateX(-50%)';
+  popup.style.background = '#8aa7ff';
+  popup.style.color = 'white';
+  popup.style.padding = '10px 20px';
+  popup.style.borderRadius = '20px';
+  popup.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+  popup.style.transition = 'opacity 0.4s';
+  popup.style.opacity = '1';
+  document.body.appendChild(popup);
+  setTimeout(() => { popup.style.opacity = '0'; }, 1500);
+  setTimeout(() => { popup.remove(); }, 2000);
+}
+
+/* ---------- 表情 + 安全文本 ---------- */
 function emotionText(e){
   return { happy: "😊 开心", sad: "😢 沮丧", lost: "😔 迷茫", grateful: "💚 感动", calm: "🌙 平静" }[e] || "💬 心情";
 }
@@ -221,7 +239,7 @@ function createPostElement(data){
 }
 function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 
-/* ---------- Post (write) ---------- */
+/* ---------- 写入 Firestore ---------- */
 async function sendPostToFirestore(text, emotion){
   try{
     await addDoc(collection(db, "posts"), {
@@ -231,15 +249,15 @@ async function sendPostToFirestore(text, emotion){
       createdAt: serverTimestamp()
     });
     console.log("✅ Post written to Firestore");
+    showPopup("✅ 已发送成功！");
   }catch(e){
     console.error("❌ Firestore write failed:", e);
-    alert("发送失败（请看控制台错误），可能是权限或网络问题");
+    alert("发送失败，请检查控制台错误。");
   }
 }
 
-/* ---------- Real-time read (listen) ---------- */
+/* ---------- 实时监听 ---------- */
 function startRealtimeListener(){
-  // 按 createdAt 降序
   const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snapshot) => {
     postsDiv.innerHTML = '';
@@ -253,9 +271,8 @@ function startRealtimeListener(){
   });
 }
 
-/* ---------- Wire send button (hook up existing button) ---------- */
+/* ---------- 发送按钮 ---------- */
 if(sendBtn){
-  // 移除页面上原有 onclick（如果仍有），改用 JS 绑定
   try { sendBtn.removeAttribute('onclick'); } catch(e){}
   sendBtn.addEventListener('click', async () => {
     const text = messageInput.value.trim();
@@ -267,13 +284,11 @@ if(sendBtn){
     sendBtn.disabled = false;
   });
 } else {
-  console.warn("⚠️ 未找到发送按钮的 DOM 节点，请确认页面中存在发送按钮");
+  console.warn("⚠️ 未找到发送按钮的 DOM 节点");
 }
 
-/* ---------- Start listener ---------- */
+/* ---------- 启动监听 ---------- */
 startRealtimeListener();
 </script>
-
-
-    function showPost(post, isNew = false) {
-      const div = document.createEleme
+</body>
+</html>
